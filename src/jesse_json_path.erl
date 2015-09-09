@@ -60,6 +60,19 @@ path([K | Rest], P, Default) ->
 %% @doc Return the immediate result of the query for key K in P.
 -spec value(kvc_key(), kvc_obj(), term()) -> term().
 value(K, P, Default) ->
+    case re:run(K, "(.*)\\[([1-9][0-9]*)\\]$", [{capture, [1, 2], binary}]) of
+        {match, [Key, BIdx]} ->
+            L = value_(Key, P, Default),
+            case binary_to_integer(BIdx) of
+                Idx when Idx =< 0 -> [];
+                Idx when Idx > length(L) -> [];
+                Idx -> lists:nth(Idx, L)
+            end;
+        nomatch ->
+            value_(K, P, Default)
+    end.
+
+value_(K, P, Default) ->
     case proplist_type(P) of
         {Nested, list} ->
             R = make_ref(),
