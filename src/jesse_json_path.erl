@@ -60,14 +60,10 @@ path([K | Rest], P, Default) ->
 %% @doc Return the immediate result of the query for key K in P.
 -spec value(kvc_key(), kvc_obj(), term()) -> term().
 value(K, P, Default) ->
-    case re:run(K, "(.*)\\[([1-9][0-9]*)\\]$", [{capture, [1, 2], binary}]) of
+    case re:run(normalize(K, string), "(.*)\\[([1-9][0-9]*)\\]$", [{capture, [1, 2], binary}, unicode]) of
         {match, [Key, BIdx]} ->
             L = value_(Key, P, Default),
-            case binary_to_integer(BIdx) of
-                Idx when Idx =< 0 -> [];
-                Idx when Idx > length(L) -> [];
-                Idx -> lists:nth(Idx, L)
-            end;
+            get_nth(binary_to_integer(BIdx), L);
         nomatch ->
             value_(K, P, Default)
     end.
@@ -276,3 +272,12 @@ normalize(K, string) when is_atom(K) ->
     atom_to_list(K);
 normalize(K, undefined) ->
     K.
+
+get_nth(Idx, _) when Idx =< 0 ->
+    [];
+get_nth(Idx, L) when is_list(L), Idx > length(L) ->
+    [];
+get_nth(Idx, L) when is_list(L) ->
+    lists:nth(Idx, L);
+get_nth(_, _) -> % other types of result
+    [].

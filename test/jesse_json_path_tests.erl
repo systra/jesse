@@ -176,3 +176,28 @@ jsx_object_test() ->
     ?assertEqual(
        not_found,
        jesse_json_path:value(<<"foo">>, [{}], not_found)).
+
+path_index_access_test() ->
+    X = {[{titi, {[{tata, [{[{bii, 1},{boo, 2}]}, {[{bii, 3},{boo, 4}]}]}, {tutu, 5}]}}]},
+    ?assertEqual(
+       {[{tata,[{[{bii,1},{boo,2}]},{[{bii,3},{boo,4}]}]},{tutu,5}]},
+       jesse_json_path:path(<<"titi">>, X)),
+    ?assertEqual(
+       5,
+       jesse_json_path:path(<<"titi.tutu">>, X)),
+    ?assertEqual(
+       [{[{bii,1},{boo,2}]},{[{bii,3},{boo,4}]}],
+       jesse_json_path:path(<<"titi.tata">>, X)),
+    ?assertEqual(
+       [],
+       jesse_json_path:path(<<"titi.tata[0]">>, X)),
+    ?assertEqual(
+       {[{bii,1},{boo,2}]},
+       jesse_json_path:path(<<"titi.tata[1]">>, X)),
+    ?assertEqual(
+       {[{bii,3},{boo,4}]},
+       jesse_json_path:path(<<"titi.tata[2]">>, X)),
+    ?assertEqual(
+       1,
+       jesse_json_path:path(<<"titi.tata[1].bii">>, X)),
+    ok.
